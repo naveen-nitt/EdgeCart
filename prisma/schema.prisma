@@ -32,9 +32,10 @@ model CartSettings {
   shop  String @unique
 
   // General
-  enabled      Boolean @default(true)
-  headerText   String  @default("Your Cart")
-  primaryColor String  @default("#000000")
+  enabled             Boolean @default(true)
+  headerText          String  @default("Your Cart")
+  primaryColor        String  @default("#000000")
+  hideCartSelectors   String  @default("")
 
   // Banner
   bannerEnabled   Boolean @default(true)

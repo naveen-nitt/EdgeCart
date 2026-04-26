@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   bannerBgColor: "#1a1a1a",
   bannerTextColor: "#ffffff",
   discountEnabled: true,
+  hideCartSelectors: "",
   upsellEnabled: false,
   upsellTitle: "You might also like",
   upsellTriggerType: "cartValue",

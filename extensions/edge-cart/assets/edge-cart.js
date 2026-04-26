@@ -18,6 +18,24 @@
   var freebieAutoSync  = false; // prevent concurrent freebie add/remove
 
   /* ===========================================================
+     HIDE THEME CART ELEMENTS
+  =========================================================== */
+  function hideThemeCartElements() {
+    var raw = settings && settings.hideCartSelectors ? settings.hideCartSelectors.trim() : "";
+    if (!raw) return;
+    var selectors = raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    selectors.forEach(function (selector) {
+      try {
+        document.querySelectorAll(selector).forEach(function (el) {
+          el.style.setProperty("display", "none", "important");
+        });
+      } catch (e) {
+        console.warn("[EdgeCart] invalid selector:", selector);
+      }
+    });
+  }
+
+  /* ===========================================================
      BOOT
   =========================================================== */
   function boot() {
@@ -29,6 +47,7 @@
         injectDynamicCSS();
         buildDOM();
         attachGlobalListeners();
+        hideThemeCartElements();
         initialized = true;
         syncFreebie();
       })

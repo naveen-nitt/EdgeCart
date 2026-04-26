@@ -26,6 +26,7 @@ export const action = async ({ request }) => {
     bannerBgColor: String(form.get("bannerBgColor") || "#1a1a1a"),
     bannerTextColor: String(form.get("bannerTextColor") || "#ffffff"),
     discountEnabled: form.get("discountEnabled") === "true",
+    hideCartSelectors: String(form.get("hideCartSelectors") || ""),
   };
 
   await prisma.cartSettings.upsert({
@@ -53,6 +54,7 @@ export default function GeneralSettings() {
   const [bannerBgColor, setBannerBgColor] = useState(s.bannerBgColor ?? "#1a1a1a");
   const [bannerTextColor, setBannerTextColor] = useState(s.bannerTextColor ?? "#ffffff");
   const [discountEnabled, setDiscountEnabled] = useState(s.discountEnabled ?? true);
+  const [hideCartSelectors, setHideCartSelectors] = useState(s.hideCartSelectors ?? "");
 
   useEffect(() => {
     if (fetcher.data?.success) {
@@ -72,6 +74,7 @@ export default function GeneralSettings() {
         bannerBgColor,
         bannerTextColor,
         discountEnabled: String(discountEnabled),
+        hideCartSelectors,
       },
       { method: "POST" }
     );
@@ -211,6 +214,27 @@ export default function GeneralSettings() {
             </span>
           </label>
         </div>
+      </s-section>
+
+      {/* Hide Theme Cart Elements */}
+      <s-section heading="Hide Theme Cart Elements">
+        <s-stack direction="block" gap="base">
+          <div>
+            <label style={labelStyle}>CSS Selectors to Hide</label>
+            <input
+              type="text"
+              value={hideCartSelectors}
+              onChange={(e) => setHideCartSelectors(e.target.value)}
+              style={inputStyle}
+              placeholder=".cart-icon, #cart-btn, [data-cart-count]"
+            />
+            <p style={helpText}>
+              Enter comma-separated CSS selectors (classes, IDs, or attributes) for your theme's default cart icon or button.
+              EdgeCart will hide those elements so customers use the slide-in cart instead.
+              Example: <code style={{ fontSize: 11 }}>.header__cart, #CartCount</code>
+            </p>
+          </div>
+        </s-stack>
       </s-section>
 
       <s-section slot="aside" heading="About This Page">
