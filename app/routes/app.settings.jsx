@@ -54,7 +54,10 @@ export default function GeneralSettings() {
   const [bannerBgColor, setBannerBgColor] = useState(s.bannerBgColor ?? "#1a1a1a");
   const [bannerTextColor, setBannerTextColor] = useState(s.bannerTextColor ?? "#ffffff");
   const [discountEnabled, setDiscountEnabled] = useState(s.discountEnabled ?? true);
-  const [hideCartSelectors, setHideCartSelectors] = useState(s.hideCartSelectors ?? "");
+  const [selectorTags, setSelectorTags] = useState(
+    (s.hideCartSelectors || "").split(",").map((x) => x.trim()).filter(Boolean)
+  );
+  const [selectorInput, setSelectorInput] = useState("");
 
   useEffect(() => {
     if (fetcher.data?.success) {
@@ -74,10 +77,33 @@ export default function GeneralSettings() {
         bannerBgColor,
         bannerTextColor,
         discountEnabled: String(discountEnabled),
-        hideCartSelectors,
+        hideCartSelectors: selectorTags.join(","),
       },
       { method: "POST" }
     );
+  }
+
+  function addSelectors(raw) {
+    const incoming = raw.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean);
+    setSelectorTags((prev) => {
+      const existing = new Set(prev);
+      return [...prev, ...incoming.filter((s) => !existing.has(s))];
+    });
+    setSelectorInput("");
+  }
+
+  function handleSelectorKeyDown(e) {
+    if (e.key === "Enter" || e.key === " " || e.key === ",") {
+      e.preventDefault();
+      if (selectorInput.trim()) addSelectors(selectorInput);
+    } else if (e.key === "Backspace" && selectorInput === "") {
+      setSelectorTags((prev) => prev.slice(0, -1));
+    }
+  }
+
+  function handleSelectorPaste(e) {
+    e.preventDefault();
+    addSelectors(e.clipboardData.getData("text"));
   }
 
   return (
@@ -221,17 +247,34 @@ export default function GeneralSettings() {
         <s-stack direction="block" gap="base">
           <div>
             <label style={labelStyle}>CSS Selectors to Hide</label>
-            <input
-              type="text"
-              value={hideCartSelectors}
-              onChange={(e) => setHideCartSelectors(e.target.value)}
-              style={inputStyle}
-              placeholder=".cart-icon, #cart-btn, [data-cart-count]"
-            />
+            <div style={selectorBoxStyle}>
+              {selectorTags.map((tag, i) => (
+                <span key={tag} style={tagStyle}>
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => setSelectorTags((prev) => prev.filter((_, j) => j !== i))}
+                    style={tagRemoveStyle}
+                    aria-label={`Remove ${tag}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                value={selectorInput}
+                onChange={(e) => setSelectorInput(e.target.value)}
+                onKeyDown={handleSelectorKeyDown}
+                onPaste={handleSelectorPaste}
+                onBlur={() => { if (selectorInput.trim()) addSelectors(selectorInput); }}
+                style={selectorInputStyle}
+                placeholder={selectorTags.length === 0 ? ".header__cart  #CartCount  .drawer" : ""}
+              />
+            </div>
             <p style={helpText}>
-              Enter comma-separated CSS selectors (classes, IDs, or attributes) for your theme's default cart icon or button.
-              EdgeCart will hide those elements so customers use the slide-in cart instead.
-              Example: <code style={{ fontSize: 11 }}>.header__cart, #CartCount</code>
+              Type a CSS class, ID, or attribute selector and press <strong>Space</strong> or <strong>Enter</strong> to add it.
+              EdgeCart will hide those theme elements so customers use the slide-in cart instead.
             </p>
           </div>
         </s-stack>
@@ -268,6 +311,25 @@ const toggleTrack = {
 const toggleThumb = {
   width: 20, height: 20, borderRadius: "50%", background: "#fff",
   boxShadow: "0 1px 4px rgba(0,0,0,0.25)", transition: "transform 0.2s", display: "block",
+};
+
+const selectorBoxStyle = {
+  display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center",
+  padding: "8px 10px", border: "1.5px solid #e0e0e0", borderRadius: 8,
+  background: "#fafafa", minHeight: 44, cursor: "text",
+};
+const tagStyle = {
+  display: "inline-flex", alignItems: "center", gap: 4,
+  background: "#f0f0f0", border: "1px solid #d0d0d0", borderRadius: 6,
+  padding: "3px 8px", fontSize: 13, color: "#222", fontFamily: "monospace",
+};
+const tagRemoveStyle = {
+  background: "none", border: "none", cursor: "pointer", padding: "0 2px",
+  fontSize: 16, lineHeight: 1, color: "#888", display: "flex", alignItems: "center",
+};
+const selectorInputStyle = {
+  flex: 1, minWidth: 160, border: "none", outline: "none", background: "transparent",
+  fontSize: 13, fontFamily: "monospace", color: "#111", padding: "2px 4px",
 };
 
 export const headers = (headersArgs) => boundary.headers(headersArgs);
